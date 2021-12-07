@@ -1,0 +1,41 @@
+
+https://github.com/sushiswap/sushiswap/blob/canary/contracts/SushiRoll.sol
+
+REQUIREMENTS:
+  ✔ It must be a single page React application using Nextjs @done(21-12-07 08:53)
+  ☐ It must use ethers.js for interacting with contracts
+  ☐ It must use at least one react hook for functions that interact with contracts
+  ✔ Components must use Tailwind CSS for styling @done(21-12-07 08:52)
+
+FEATURE A: Tabs navigation component:
+  ☐ Features B/C/D below should each be on its own tab
+  ☐ The component should be reusable for potentially other pages and not specific to the content in this assignment
+  ✔ It will require state management of some kind (up to you what you’d like to use) @done(21-12-07 09:45)
+  ☐ There should be an “active tab” style
+  ☐ Clicking on a tab should navigate to that section.
+  ☐ Also, next/prev buttons should be available to navigate tabs.
+
+FEATURE B: Token List:
+  ☐ Users are able to see the pre-selected list of ERC20 tokens with name, symbol and address displayed (dev can choose their favorite 10 tokens listed in sushiswap)
+  ☐ Each list item can have a 'Copy Address' button or you can provide another way to get those token addresses to the next feature
+
+FEATURE C: Uniswap LP Position:
+  ☐ Users first need to be able to copy and paste 2 token addresses from the token list
+  ☐ Frontend shows the uniswap LP position of those two tokens if exists
+    ☐ dev can use this function for creating Pair object if needed
+      https://github.com/Uniswap/uniswap-v2-sdk/blob/main/src/entities/pair.ts#L34
+  ☐ users are able to see the amount of LP tokens deposited
+
+FEATURE D.1: migrate from uniswap to sushiswap:
+  ☐ Users first need to copy and paste 2 token addresses from the token list
+  ☐ Users are required to input the amount of LP tokens to be migrated (out of max amount in uniswap)
+  ☐ amountAMin and amountBMin for calling function migrateWithPermit is automatically calculated (they shouldn't be 0!)
+  ☐ deadline is automatically set to 10 minutes later than local time
+  ☐ Users click 'Migrate' button to call function SushiRoll.migrate()
+  ☐ When the transaction is confirmed, the page should be refreshed
+
+FEATURE D.2: migrate with signature:
+  ☐ The first four steps are the same as 'Feature D.1'
+  ☐ Let the user sign the migrate request with MetaMask (you can use this package if needed)
+  ☐ Users click 'Migrate' button to call function SushiRoll.migrateWithPermit
+  ☐ When the transaction is confirmed, the page should be refreshed

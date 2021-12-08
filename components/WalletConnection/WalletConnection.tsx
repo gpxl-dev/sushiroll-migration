@@ -14,7 +14,7 @@ const WalletConnection: FC<{}> = ({}) => {
       ) : (
         <button
           onClick={() =>
-            activate(new InjectedConnector({ supportedChainIds: [1, 42] }))
+            activate(new InjectedConnector({ supportedChainIds: [1, 4, 42] }))
           }
         >
           Connect wallet

@@ -5,8 +5,8 @@ export const selectedTokensState = atom<[string | null, string | null]>({
   key: "selectedTokens",
   // default: [null, null],
   default: [
-    "0x0ace32f6e87ac1457a5385f8eb0208f37263b415",
-    "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+    "0x1f9840a85d5af5bf1d1762f925bdaddc4201f984",
+    "0xc778417e063141139fce010982780140aa0cd5ab",
   ],
 });
 
@@ -19,7 +19,7 @@ export const selectedTokensInfo = atom<[TokenInfo | null, TokenInfo | null]>({
   key: "selectedTokensInfo",
   // default: [null, null],
   default: [
-    { symbol: "HBT", decimals: 10 },
+    { symbol: "UNI", decimals: 18 },
     { symbol: "WETH", decimals: 18 },
   ],
 });

@@ -28,41 +28,40 @@ FEATURE C: Uniswap LP Position:
   ✔ users are able to see the amount of LP tokens deposited @done(21-12-07 23:24)
 
   Extras:
-    ☐ Error handling if no pair
+    ✔ Error handling if no pair @done(21-12-09 16:31)
 
 FEATURE D.1: migrate from uniswap to sushiswap:
   ✔ Users are required to input the amount of LP tokens to be migrated (out of max amount in uniswap) @done(21-12-09 09:48)
   ✔ amountAMin and amountBMin for calling function migrateWithPermit is automatically calculated (they shouldn't be 0!) @done(21-12-07 23:25)
   ✔ deadline is automatically set to 10 minutes later than local time @done(21-12-08 11:48)
-  ✔ Users click 'Migrate' button to call function SushiRoll.migrate() @done(21-12-08 11:48)
-  ☐ When the transaction is confirmed, the page should be refreshed
+  ✔ Users click 'Migrate' button to call function SushiRoll.migrate() @done(21-12-09 16:31)
+  ✔ When the transaction is confirmed, the page should be refreshed @done(21-12-09 16:31)
 
 FEATURE D.2: migrate with signature:
-  ☐ The first four steps are the same as 'Feature D.1'
+  ✔ The first four steps are the same as 'Feature D.1' @done(21-12-09 16:31)
   ✔ Let the user sign the migrate request with MetaMask (you can use this package if needed) @done(21-12-08 19:11)
-  ☐ Users click 'Migrate' button to call function SushiRoll.migrateWithPermit
-  ☐ When the transaction is confirmed, the page should be refreshed
+  ✔ Users click 'Migrate' button to call function SushiRoll.migrateWithPermit @done(21-12-09 16:17)
+  ✔ When the transaction is confirmed, the page should be refreshed @done(21-12-09 16:31)
 
 Todo:
   ✔ Please connect wallet component @done(21-12-09 10:05)
-  ☐ No tokens selected state
-  ☐ Transaction completion listeners
-  ☐ Error handlers
+  ✔ No tokens selected state @done(21-12-09 12:36)
+  ✔ Transaction completion listeners @done(21-12-09 15:29)
+    ✔ Loading state on approve button. @done(21-12-09 16:17)
+  ✔ Error handlers @done(21-12-09 12:36)
   ☐ Unsupported netwok
   ✔ Loading state for values @done(21-12-09 10:24)
-
-Error handling:
-  ☐ Quickly switch between tabs before things have loaded
-  ☐ Allowance on a bad pair
-  ☐ Assume network[1] - reset tab if connect => network[4]
 
 Things I'd improve:
   ☐ update reserves & totalsupply regularly
   ☐ componentise more things (e.g. range input), and make components more generic
   ☐ a11y (aria attributes, tab order, etc.)
   ☐ i18n
-  ☐ testing
-  ☐ cache values when switching back and forth between tabs
+  ☐ testing scripts
+  ☐ Handle refreshing page, handle multiple concurrent migrations
+  ☐ toast notifications
 
 Deviations from spec:
-  ☐
+  ☐ only one button with permit
+  ☐ page doesn't refresh
+  ☐ Not showing address in UI

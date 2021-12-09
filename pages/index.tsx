@@ -1,71 +1,93 @@
 import classNames from "classnames";
-import { providers } from "ethers";
 import type { NextPage } from "next";
-import dynamic from "next/dynamic";
-import Head from "next/head";
-import Image from "next/image";
-import React, { useEffect } from "react";
-import { useRecoilState, useRecoilValue } from "recoil";
+import React from "react";
+import { useRecoilValue } from "recoil";
+import ErrorOverlay from "../components/ErrorOverlay/ErrorOverlay";
 import NextPrevTabButton from "../components/Tabs/NextPrevTabButton";
 import { Tab, Tabs } from "../components/Tabs/Tabs";
 import TokenList from "../components/TokenList/TokenList";
 import UniswapLiquidityPosition from "../components/UniswapLiquidityPosition/UniswapLiquidityPosition";
 import MigrateUniswap from "../components/UniswapMigration/UniswapMigration";
-import WalletConnection from "../components/WalletConnection/WalletConnection";
 import RequireWalletConnection from "../components/WalletConnection/RequireWalletConnection";
-import { selectedTabFamily } from "../state/state";
+import WalletConnection from "../components/WalletConnection/WalletConnection";
+import useResetAppState from "../hooks/useResetAppState";
+import { migrationCompleteState, selectedTabFamily } from "../state/state";
 
 const Home: NextPage = () => {
   const currentTab = useRecoilValue(selectedTabFamily("main"));
+  const complete = useRecoilValue(migrationCompleteState);
+  const reset = useResetAppState();
+
   return (
     <div className="relative flex flex-col max-w-2xl mx-auto pt-8">
-      <header className="flex flex-row justify-between items-center  mb-4">
+      <header className="flex flex-row justify-between items-center  mb-12">
         <h1 className="text-2xl">Migrate liquidity using SushiRoll</h1>
         <WalletConnection />
       </header>
-      <Tabs tabsId={"main"}>
-        <Tab label={"Select tokens"}>
-          <TokenList />
-        </Tab>
-        <Tab label={"Configure migration"}>
-          <RequireWalletConnection>
-            <UniswapLiquidityPosition />
-          </RequireWalletConnection>
-        </Tab>
-        <Tab label={"Execute"}>
-          <RequireWalletConnection>
-            <MigrateUniswap />
-          </RequireWalletConnection>
-        </Tab>
-      </Tabs>
-      <NextPrevTabButton
-        type="prev"
-        tabsId="main"
-        disabled={currentTab === 0}
-        className={classNames(
-          "absolute text-2xl left-0 top-52 p-4",
-          "transition-opacity opacity-1",
-          {
-            "opacity-0 cursor-default": currentTab === 0,
+      <div className="relative">
+        <ErrorOverlay
+          show={complete}
+          header="Liquidity migrated successfully"
+          paragraphs={[
+            "Your liquidity has been succesfully moved from Uniswap to Sushiswap",
+            "Click restart to do it all again!",
+          ]}
+          footer={
+            <button className="py-2 px-4 mt-4 border-2 text-sm" onClick={reset}>
+              Restart
+            </button>
           }
+        />
+        <Tabs tabsId={"main"}>
+          <Tab label={"Select tokens"}>
+            <RequireWalletConnection>
+              <TokenList />
+            </RequireWalletConnection>
+          </Tab>
+          <Tab label={"Configure migration"}>
+            <RequireWalletConnection>
+              <UniswapLiquidityPosition />
+            </RequireWalletConnection>
+          </Tab>
+          <Tab label={"Execute"}>
+            <RequireWalletConnection>
+              <MigrateUniswap />
+            </RequireWalletConnection>
+          </Tab>
+        </Tabs>
+        {!complete && (
+          <NextPrevTabButton
+            type="prev"
+            tabsId="main"
+            disabled={currentTab === 0}
+            className={classNames(
+              "absolute text-2xl left-0 top-64 p-4",
+              "transition-opacity opacity-1",
+              {
+                "opacity-0 cursor-default": currentTab === 0,
+              }
+            )}
+          >
+            &lt;
+          </NextPrevTabButton>
         )}
-      >
-        &lt;
-      </NextPrevTabButton>
-      <NextPrevTabButton
-        type="next"
-        tabsId="main"
-        disabled={currentTab === 2}
-        className={classNames(
-          "absolute text-2xl right-0 top-52 p-4",
-          "transition-opacity opacity-1",
-          {
-            "opacity-0 cursor-default": currentTab === 2,
-          }
+        {!complete && (
+          <NextPrevTabButton
+            type="next"
+            tabsId="main"
+            disabled={currentTab === 2}
+            className={classNames(
+              "absolute text-2xl right-0 top-64 p-4",
+              "transition-opacity opacity-1",
+              {
+                "opacity-0 cursor-default": currentTab === 2,
+              }
+            )}
+          >
+            &gt;
+          </NextPrevTabButton>
         )}
-      >
-        &gt;
-      </NextPrevTabButton>
+      </div>
     </div>
   );
 };

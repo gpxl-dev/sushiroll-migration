@@ -6,7 +6,7 @@ import classNames from "classnames";
 import { useRecoilValue, useSetRecoilState } from "recoil";
 import {
   noLPErrorState,
-  selectedTokensInfo,
+  selectedTokensInfoState,
   selectedTokensSelector,
   TokenPair,
 } from "../../state/state";
@@ -16,7 +16,7 @@ const TokenList: FC<{}> = ({}) => {
   const [firstTokenWasLastSet, setFirstTokenWasLastSet] =
     useState<boolean>(false);
   const selectedTokens = useRecoilValue(selectedTokensSelector);
-  const setSelectedTokens = useSetRecoilState(selectedTokensInfo);
+  const setSelectedTokens = useSetRecoilState(selectedTokensInfoState);
   const setNoLp = useSetRecoilState(noLPErrorState);
 
   const onTokenClick = (

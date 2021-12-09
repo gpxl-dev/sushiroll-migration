@@ -9,9 +9,20 @@ export const selectedTabFamily = atomFamily<number, string>({
   default: 0,
 });
 
-export const selectedTokensInfo = atom<TokenPair>({
+export const selectedTokensInfoState = atom<TokenPair>({
   key: "selectedTokensInfo",
   default: [null, null],
+});
+
+export const orderedSelectedTokensInfoSelector = selector<TokenPair>({
+  key: "orderedSelectedTokensInfo",
+  get: ({ get }) => {
+    const selectedTokensInfo = get(selectedTokensInfoState);
+    const inverted = get(lpInvertedState);
+    return inverted
+      ? [selectedTokensInfo[1], selectedTokensInfo[0]]
+      : selectedTokensInfo;
+  },
 });
 
 export const noLPErrorState = atom<boolean>({
@@ -22,7 +33,7 @@ export const noLPErrorState = atom<boolean>({
 export const selectedTokensSelector = selector<[string | null, string | null]>({
   key: "selectedTokens",
   get: ({ get }) =>
-    get(selectedTokensInfo).map((t) => t?.address || null) as [
+    get(selectedTokensInfoState).map((t) => t?.address || null) as [
       string | null,
       string | null
     ],
@@ -39,12 +50,9 @@ export const lpTotalSupplyState = atom<BigNumber | null>({
 });
 
 // if token0 isn't selectedTokens[0]
-export const lpIsInvertedSelector = selector<boolean>({
-  key: "lpIsInverted",
-  get: ({ get }) => {
-    const [token0, token1] = get(selectedTokensSelector);
-    return new BigNumber(token0 || 0).isGreaterThanOrEqualTo(token1 || 0);
-  },
+export const lpInvertedState = atom<boolean>({
+  key: "lpInverted",
+  default: false,
 });
 
 export const lpReservesState = atom<[BigNumber, BigNumber] | null>({
@@ -75,13 +83,12 @@ export const userTokensInLpSelector = selector<[BigNumber, BigNumber] | null>({
   get: ({ get }) => {
     const userLPShare = get(userLpShareSelector);
     const lpReserves = get(lpReservesState);
-    const lpIsInverted = get(lpIsInvertedSelector);
     if (userLPShare === null || lpReserves === null) return null;
     if (userLPShare.isEqualTo(0)) return [new BigNumber(0), new BigNumber(0)];
     const userTokens = lpReserves.map((reserve) =>
       reserve.multipliedBy(userLPShare)
     ) as [BigNumber, BigNumber];
-    return lpIsInverted ? [userTokens[1], userTokens[0]] : userTokens;
+    return userTokens;
   },
 });
 
@@ -97,7 +104,7 @@ export const amountToMigrateSelector = selector<BigNumber | null>({
     const lpBalance = get(userLPBalanceState);
     if (lpBalance === null) return null;
 
-    return lpBalance.multipliedBy(fraction);
+    return lpBalance.multipliedBy(fraction).dp(0, BigNumber.ROUND_FLOOR);
   },
 });
 
@@ -111,7 +118,6 @@ export const minimumAmountsSelector = selector<[BigNumber, BigNumber] | null>({
     if (userLpShare.isEqualTo(0) || lpReserves[0].isEqualTo(0))
       return [new BigNumber(0), new BigNumber(0)];
     const slippage = get(userSlippageToleranceState);
-    const invert = get(lpIsInvertedSelector);
     // this is price of token 0
     const token0PricePreSlippage = lpReserves[1].dividedBy(lpReserves[0]);
     const token0PriceAfterPositiveSlippage =
@@ -131,14 +137,24 @@ export const minimumAmountsSelector = selector<[BigNumber, BigNumber] | null>({
     const token1ReservesAfterNegativeSlippage = lpInvariant.dividedBy(
       token0ReservesAfterNegativeSlippage
     );
-    return invert
-      ? [
-          token1ReservesAfterNegativeSlippage.multipliedBy(shareToRemove),
-          token0ReservesAfterPositiveSlippage.multipliedBy(shareToRemove),
-        ]
-      : [
-          token0ReservesAfterPositiveSlippage.multipliedBy(shareToRemove),
-          token1ReservesAfterNegativeSlippage.multipliedBy(shareToRemove),
-        ];
+    return [
+      token0ReservesAfterPositiveSlippage.multipliedBy(shareToRemove),
+      token1ReservesAfterNegativeSlippage.multipliedBy(shareToRemove),
+    ];
   },
+});
+
+export const approvePendingState = atom<boolean>({
+  key: "approvePending",
+  default: false,
+});
+
+export const migratePendingState = atom<"approval" | "permit" | false>({
+  key: "migratePending",
+  default: false,
+});
+
+export const migrationCompleteState = atom<boolean>({
+  key: "migrationComplete",
+  default: false,
 });

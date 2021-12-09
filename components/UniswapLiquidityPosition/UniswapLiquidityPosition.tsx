@@ -14,11 +14,12 @@ import {
 import useUniswapPair from "../../hooks/useUniswapPair";
 import {
   fractionToRemoveState,
+  lpInvertedState,
   lpReservesState,
   lpTotalSupplyState,
   minimumAmountsSelector,
   noLPErrorState,
-  selectedTokensInfo,
+  orderedSelectedTokensInfoSelector,
   selectedTokensSelector,
   userLPBalanceState,
   userSlippageToleranceState,
@@ -33,13 +34,14 @@ const UniswapLiquidityPosition: FC<{}> = ({}) => {
   const pair = useUniswapPair(tokens[0], tokens[1]);
   const { account } = useWeb3React<providers.Web3Provider>();
 
-  const [noLP, setNoLP] = useRecoilState(noLPErrorState);
+  const noLP = useRecoilValue(noLPErrorState);
   const [lpBalance, setLpBalance] = useRecoilState(userLPBalanceState);
   const resetLpBalance = useResetRecoilState(userLPBalanceState);
   const setLpReserves = useSetRecoilState(lpReservesState);
   const resetLpReserves = useResetRecoilState(lpReservesState);
   const setLpTotalSupply = useSetRecoilState(lpTotalSupplyState);
   const resetLpTotalSupply = useResetRecoilState(lpTotalSupplyState);
+  const setInverted = useSetRecoilState(lpInvertedState);
   const [slippageTolerance, setSlippageTolerance] = useRecoilState(
     userSlippageToleranceState
   );
@@ -49,7 +51,7 @@ const UniswapLiquidityPosition: FC<{}> = ({}) => {
   const minTokens = useRecoilValue(minimumAmountsSelector);
 
   const userTokensInLp = useRecoilValue(userTokensInLpSelector);
-  const tokenInfo = useRecoilValue(selectedTokensInfo);
+  const tokenInfo = useRecoilValue(orderedSelectedTokensInfoSelector);
 
   useEffect(() => {
     if (!pair || !account || noLP) {
@@ -58,11 +60,14 @@ const UniswapLiquidityPosition: FC<{}> = ({}) => {
     } else {
       resetLpBalance();
       if (pair.address === constants.AddressZero) {
-        if (twoTokensSelected) setNoLP(true);
         return;
       }
       pair.balanceOf(account).then((balance: EthersBigNumber) => {
         setLpBalance(new BigNumber(balance.toString()));
+      });
+
+      pair.token0().then((addr: string) => {
+        setInverted(addr !== tokens[0]);
       });
 
       resetLpReserves();
@@ -91,13 +96,13 @@ const UniswapLiquidityPosition: FC<{}> = ({}) => {
     resetLpBalance,
     resetLpReserves,
     resetLpTotalSupply,
-    setNoLP,
     noLP,
     twoTokensSelected,
+    setInverted,
+    tokens,
   ]);
 
   return (
-    // TODO: Decimal values should be floored.
     <div className="relative grid grid-cols-2 gap-x-4 gap-y-2">
       <ErrorOverlay
         header={"This doesn't seem right..."}

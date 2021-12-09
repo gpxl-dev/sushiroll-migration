@@ -1,19 +1,28 @@
 import { useWeb3React } from "@web3-react/core";
-import React, { FC, useCallback, useEffect, useState } from "react";
-import { BigNumber as EthersBigNumber, constants, providers } from "ethers";
-import { useRecoilValue } from "recoil";
+import React, { FC, useCallback, useEffect, useMemo, useState } from "react";
+import {
+  BigNumber as EthersBigNumber,
+  constants,
+  providers,
+  Event,
+} from "ethers";
+import { useRecoilState, useRecoilValue, useSetRecoilState } from "recoil";
 import useSushiRoll from "../../hooks/useSushiRoll";
 import useUniswapPair from "../../hooks/useUniswapPair";
 import {
   amountToMigrateSelector,
-  fractionToRemoveState,
+  approvePendingState,
+  lpInvertedState,
+  migratePendingState,
+  migrationCompleteState,
   minimumAmountsSelector,
   selectedTokensSelector,
-  userLPBalanceState,
 } from "../../state/state";
 import BigNumber from "bignumber.js";
 import { splitSignature } from "@ethersproject/bytes";
 import ErrorOverlay from "../ErrorOverlay/ErrorOverlay";
+import classNames from "classnames";
+import useFilteredEventListener from "../../hooks/useFilteredEventListener";
 
 const UNISWAP_DOMAIN_INFO = {
   version: "1",
@@ -35,41 +44,19 @@ const EIP712_DOMAIN_TYPE = [
   { name: "verifyingContract", type: "address" },
 ];
 
-const getPermitTypedData: (
-  domainParams: {
-    chainId: number;
-    verifyingContract: string;
-  },
-  messageParams: {
-    owner: string;
-    spender: string;
-    value: string;
-    nonce: string;
-    deadline: string;
-  }
-) => any = (domainParams, messageParams) => {
-  const typedData = {
-    types: {
-      EIP712Domain: EIP712_DOMAIN_TYPE,
-      Permit: EIP2612_PERMIT_TYPE,
-    },
-    primaryType: "Permit",
-    domain: {
-      ...UNISWAP_DOMAIN_INFO,
-      ...domainParams,
-    },
-    message: messageParams,
-  };
-  return typedData;
-};
-
 const MigrateUniswap: FC<{}> = ({}) => {
   const { account, chainId, library } = useWeb3React<providers.Web3Provider>();
   const tokens = useRecoilValue(selectedTokensSelector);
+  const isInverted = useRecoilValue(lpInvertedState);
   const pair = useUniswapPair(tokens[0], tokens[1]);
   const sushiRoll = useSushiRoll();
-  const minimumAmouts = useRecoilValue(minimumAmountsSelector);
+  const minimumAmounts = useRecoilValue(minimumAmountsSelector);
   const amountToMigrate = useRecoilValue(amountToMigrateSelector);
+  const [approvePending, setApprovePending] =
+    useRecoilState(approvePendingState);
+  const [migratePending, setMigratePending] =
+    useRecoilState(migratePendingState);
+  const setMigrationComplete = useSetRecoilState(migrationCompleteState);
 
   const canMigrate =
     !!sushiRoll &&
@@ -79,20 +66,47 @@ const MigrateUniswap: FC<{}> = ({}) => {
     pair.address !== constants.AddressZero &&
     amountToMigrate !== null &&
     amountToMigrate.gt(0) &&
-    minimumAmouts !== null;
+    minimumAmounts !== null;
 
-  const [hasApproval, setHasApproval] = useState<boolean>(false);
+  const [allowance, setAllowance] = useState<BigNumber>(new BigNumber(0));
+
+  const approvalFilter = useMemo(() => {
+    if (!pair || !sushiRoll) return null;
+    // Approval(owner, spender, value)
+    return pair.filters.Approval([account, sushiRoll.address]);
+  }, [pair, account, sushiRoll]);
+
+  const onApproval = useCallback(
+    (event: Event) => {
+      if (pair) {
+        const parsedEvent = pair.interface.parseLog(event);
+        setAllowance((a) => a.plus(parsedEvent.args.value.toString()));
+        setApprovePending(false);
+      }
+    },
+    [pair, setApprovePending]
+  );
+
+  useFilteredEventListener(approvalFilter, onApproval);
+
+  const transferFilter = useMemo(() => {
+    if (!pair || !sushiRoll) return null;
+    // Transfer(from, to, value)
+    return pair.filters.Transfer([account, sushiRoll.address]);
+  }, [pair, account, sushiRoll]);
+
+  const onTransfer = useCallback(() => {
+    setMigratePending(false);
+    setMigrationComplete(true);
+  }, [setMigratePending, setMigrationComplete]);
+  useFilteredEventListener(transferFilter, onTransfer);
 
   useEffect(() => {
     if (!canMigrate) return;
     pair
       .allowance(account, sushiRoll.address)
       .then((allowance: EthersBigNumber) => {
-        setHasApproval(
-          new BigNumber(allowance.toString()).isGreaterThanOrEqualTo(
-            amountToMigrate
-          )
-        );
+        setAllowance(new BigNumber(allowance.toString()));
       });
   }, [pair, account, sushiRoll, amountToMigrate, canMigrate]);
 
@@ -102,36 +116,41 @@ const MigrateUniswap: FC<{}> = ({}) => {
     }
 
     const signer = library!.getSigner();
-    const currentNonce = await pair.nonces(account);
-    const deadline = (Math.floor(Date.now() / 1000) + 10 * 60).toString();
 
-    const signature = await signer._signTypedData(
-      { ...UNISWAP_DOMAIN_INFO, chainId, verifyingContract: pair.address },
-      {
-        Permit: EIP2612_PERMIT_TYPE,
-      },
-      {
+    try {
+      setMigratePending("permit");
+      const currentNonce = await pair.nonces(account);
+      const deadline = (Math.floor(Date.now() / 1000) + 10 * 60).toString();
+      const signature = await signer._signTypedData(
+        { ...UNISWAP_DOMAIN_INFO, chainId, verifyingContract: pair.address },
+        {
+          Permit: EIP2612_PERMIT_TYPE,
+        },
+        {
+          deadline,
+          nonce: currentNonce,
+          owner: account!,
+          spender: sushiRoll.address,
+          value: amountToMigrate.toFixed(0),
+        }
+      );
+
+      const { v, r, s } = splitSignature(signature);
+
+      await sushiRoll.migrateWithPermit(
+        tokens[0],
+        tokens[1],
+        amountToMigrate.toFixed(0),
+        minimumAmounts[isInverted ? 1 : 0].toFixed(0),
+        minimumAmounts[isInverted ? 0 : 1].toFixed(0),
         deadline,
-        nonce: currentNonce,
-        owner: account!,
-        spender: sushiRoll.address,
-        value: amountToMigrate.toFixed(0),
-      }
-    );
-
-    const { v, r, s } = splitSignature(signature);
-
-    sushiRoll.migrateWithPermit(
-      tokens[0],
-      tokens[1],
-      amountToMigrate.toFixed(0),
-      minimumAmouts[0].toFixed(0),
-      minimumAmouts[1].toFixed(0),
-      deadline,
-      v,
-      r,
-      s
-    );
+        v,
+        r,
+        s
+      );
+    } catch (e: any) {
+      setMigratePending(false);
+    }
   }, [
     pair,
     chainId,
@@ -140,22 +159,31 @@ const MigrateUniswap: FC<{}> = ({}) => {
     amountToMigrate,
     sushiRoll,
     library,
-    minimumAmouts,
+    minimumAmounts,
     tokens,
+    setMigratePending,
+    isInverted,
   ]);
 
   const migrateWithAllowance = () => {
     if (canMigrate) {
-      sushiRoll.migrate(
-        tokens[0],
-        tokens[1],
-        amountToMigrate.toFixed(0),
-        minimumAmouts[0].toFixed(0),
-        minimumAmouts[1].toFixed(0),
-        (Math.floor(Date.now() / 1000) + 10 * 60).toString()
-      );
+      setMigratePending("approval");
+      sushiRoll
+        .migrate(
+          tokens[0],
+          tokens[1],
+          amountToMigrate.toFixed(0),
+          minimumAmounts[isInverted ? 1 : 0].toFixed(0),
+          minimumAmounts[isInverted ? 0 : 1].toFixed(0),
+          (Math.floor(Date.now() / 1000) + 10 * 60).toString()
+        )
+        .catch(() => setMigratePending(false));
     }
   };
+
+  const hasApproval = allowance.isGreaterThanOrEqualTo(
+    amountToMigrate || new BigNumber(0)
+  );
 
   return (
     <div className="relative w-full">
@@ -167,25 +195,77 @@ const MigrateUniswap: FC<{}> = ({}) => {
           "Please check your selections and try again",
         ]}
       />
-      {!hasApproval ? (
-        <>
+      <div className="flex flex-row items-center w-full">
+        <div className="flex flex-1 flex-col items-center justify-center p-6">
           <button
-            disabled={!canMigrate}
+            className="relative"
+            disabled={!canMigrate || hasApproval || approvePending}
             onClick={() => {
               if (canMigrate) {
-                pair.approve(sushiRoll.address, amountToMigrate.toFixed(0));
+                setApprovePending(true);
+                pair
+                  .approve(sushiRoll.address, amountToMigrate.toFixed(0))
+                  .catch(() => {
+                    setApprovePending(false);
+                  });
               }
             }}
           >
-            Approve
+            <span
+              className={classNames({
+                "opacity-50": hasApproval || approvePending,
+              })}
+            >
+              Approve
+            </span>
+            {hasApproval && <span className="absolute ml-2">✓</span>}
+            {approvePending && (
+              <span className="absolute ml-2 animate-spin">.</span>
+            )}
           </button>
-          <button onClick={migrateWithPermit}>MigrateWithPermit</button>
-        </>
-      ) : (
-        <button disabled={!canMigrate} onClick={migrateWithAllowance}>
-          Migrate
-        </button>
-      )}
+          <span className="text-2xl p-4">+</span>
+          <button
+            disabled={!hasApproval || !!migratePending}
+            className={classNames("relative transition-opacity duration-200", {
+              "opacity-40 cursor-not-allowed": !hasApproval,
+              "cursor-wait": migratePending,
+            })}
+            onClick={migrateWithAllowance}
+          >
+            <span
+              className={classNames({
+                "opacity-50": !hasApproval || migratePending,
+              })}
+            >
+              Migrate
+            </span>
+            {migratePending === "approval" && (
+              <span className="absolute ml-2 animate-spin">.</span>
+            )}
+          </button>
+        </div>
+        <div>-OR-</div>
+        <div className="flex flex-1 items-center justify-center p-6">
+          <button
+            disabled={!!migratePending}
+            className={classNames("relative transition-opacity duration-200", {
+              "cursor-wait": !!migratePending,
+            })}
+            onClick={migrateWithPermit}
+          >
+            <span
+              className={classNames({
+                "opacity-50": migratePending,
+              })}
+            >
+              Migrate
+            </span>
+            {migratePending === "permit" && (
+              <span className="absolute ml-2 animate-spin">.</span>
+            )}
+          </button>
+        </div>
+      </div>
     </div>
   );
 };

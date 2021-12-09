@@ -1,5 +1,5 @@
 import { useWeb3React } from "@web3-react/core";
-import React, { Children, FC, ReactNode, useState } from "react";
+import React, { FC } from "react";
 import WalletConnection from "./WalletConnection";
 
 const RequireWalletConnection: FC<{}> = ({ children }) => {

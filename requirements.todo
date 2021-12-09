@@ -17,7 +17,6 @@ FEATURE A: Tabs navigation component:
 
 FEATURE B: Token List:
   ✔ Users are able to see the pre-selected list of ERC20 tokens with name, symbol and address displayed (dev can choose their favorite 10 tokens listed in sushiswap) @done(21-12-08 23:41)
-    ☐ Address not done
   ✔ Each list item can have a 'Copy Address' button or you can provide another way to get those token addresses to the next feature @done(21-12-08 23:34)
 
 FEATURE C: Uniswap LP Position:
@@ -49,7 +48,7 @@ Todo:
   ✔ Transaction completion listeners @done(21-12-09 15:29)
     ✔ Loading state on approve button. @done(21-12-09 16:17)
   ✔ Error handlers @done(21-12-09 12:36)
-  ☐ Unsupported netwok
+  ✔ Unsupported netwok @done(21-12-09 17:12)
   ✔ Loading state for values @done(21-12-09 10:24)
 
 Things I'd improve:

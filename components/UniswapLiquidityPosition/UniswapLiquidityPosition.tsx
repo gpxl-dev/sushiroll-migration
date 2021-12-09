@@ -1,11 +1,8 @@
-import { BigNumber } from "bignumber.js";
-import { BigNumber as EthersBigNumber, constants } from "ethers";
-import { formatUnits } from "@ethersproject/units";
 import { useWeb3React } from "@web3-react/core";
-import { providers } from "ethers";
-import React, { FC, useEffect, useState } from "react";
+import { BigNumber } from "bignumber.js";
+import { BigNumber as EthersBigNumber, constants, providers } from "ethers";
+import React, { FC, useEffect } from "react";
 import {
-  DefaultValue,
   useRecoilState,
   useRecoilValue,
   useResetRecoilState,
@@ -25,8 +22,8 @@ import {
   userSlippageToleranceState,
   userTokensInLpSelector,
 } from "../../state/state";
-import FormattedBigNumberUnits from "../Numbers/FormattedBigNumberUnits";
 import ErrorOverlay from "../ErrorOverlay/ErrorOverlay";
+import FormattedBigNumberUnits from "../Numbers/FormattedBigNumberUnits";
 
 const UniswapLiquidityPosition: FC<{}> = ({}) => {
   const tokens = useRecoilValue(selectedTokensSelector);

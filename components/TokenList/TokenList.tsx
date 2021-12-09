@@ -1,9 +1,9 @@
 import { useWeb3React } from "@web3-react/core";
-import React, { FC, useState } from "react";
-import Image from "next/image";
-import allTokens, { TokenInfo } from "../../constants/tokens";
 import classNames from "classnames";
+import Image from "next/image";
+import React, { FC, useState } from "react";
 import { useRecoilValue, useSetRecoilState } from "recoil";
+import allTokens, { TokenInfo } from "../../constants/tokens";
 import {
   noLPErrorState,
   selectedTokensInfoState,

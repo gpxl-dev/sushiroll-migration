@@ -1,5 +1,5 @@
-import { BigNumber } from "bignumber.js";
 import { formatUnits } from "@ethersproject/units";
+import { BigNumber } from "bignumber.js";
 import React, { FC } from "react";
 
 function fixLength(input: string, decimalPlaces: number) {

@@ -23,7 +23,7 @@ const Home: NextPage = () => {
 
   return (
     <div className="relative flex flex-col max-w-2xl mx-auto pt-8">
-      <header className="flex flex-row justify-between items-center  mb-12">
+      <header className="flex flex-row justify-between items-center mb-12">
         <h1 className="text-2xl">Migrate liquidity using SushiRoll</h1>
         <WalletConnection />
       </header>

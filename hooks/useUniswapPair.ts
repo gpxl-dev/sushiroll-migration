@@ -1,8 +1,7 @@
 import { useWeb3React } from "@web3-react/core";
 import { constants, Contract, providers } from "ethers";
 import { useEffect, useState } from "react";
-import { useRecoilValue, useSetRecoilState } from "recoil";
-
+import { useSetRecoilState } from "recoil";
 import * as UniswapV2PairAbi from "../abis/UniswapV2Pair.json";
 import { noLPErrorState } from "../state/state";
 import useUniswapFactory from "./useUniswapFactory";

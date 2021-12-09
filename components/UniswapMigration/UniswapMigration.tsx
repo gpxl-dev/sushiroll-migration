@@ -1,12 +1,16 @@
+import { splitSignature } from "@ethersproject/bytes";
 import { useWeb3React } from "@web3-react/core";
-import React, { FC, useCallback, useEffect, useMemo, useState } from "react";
+import BigNumber from "bignumber.js";
+import classNames from "classnames";
 import {
   BigNumber as EthersBigNumber,
   constants,
-  providers,
   Event,
+  providers,
 } from "ethers";
+import React, { FC, useCallback, useEffect, useMemo, useState } from "react";
 import { useRecoilState, useRecoilValue, useSetRecoilState } from "recoil";
+import useFilteredEventListener from "../../hooks/useFilteredEventListener";
 import useSushiRoll from "../../hooks/useSushiRoll";
 import useUniswapPair from "../../hooks/useUniswapPair";
 import {
@@ -20,11 +24,7 @@ import {
   selectedTokensInfoState,
   selectedTokensSelector,
 } from "../../state/state";
-import BigNumber from "bignumber.js";
-import { splitSignature } from "@ethersproject/bytes";
 import ErrorOverlay from "../ErrorOverlay/ErrorOverlay";
-import classNames from "classnames";
-import useFilteredEventListener from "../../hooks/useFilteredEventListener";
 
 const UNISWAP_DOMAIN_INFO = {
   version: "1",

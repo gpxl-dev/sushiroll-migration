@@ -97,19 +97,6 @@ const MigrateUniswap: FC<{}> = ({}) => {
 
   useFilteredEventListener(approvalFilter, onApproval);
 
-  // On success, LP tokens will be transferred to sushiroll.
-  const transferFilter = useMemo(() => {
-    if (!pair || !sushiRoll) return null;
-    // Transfer(from, to, value)
-    return pair.filters.Transfer([account, sushiRoll.address]);
-  }, [pair, account, sushiRoll]);
-
-  const onTransfer = useCallback(() => {
-    setMigratePending(false);
-    setMigrationComplete(true);
-  }, [setMigratePending, setMigrationComplete]);
-  useFilteredEventListener(transferFilter, onTransfer);
-
   // Get existing allowance.
   useEffect(() => {
     if (!canMigrate) return;
@@ -156,7 +143,7 @@ const MigrateUniswap: FC<{}> = ({}) => {
 
       const { v, r, s } = splitSignature(signature);
 
-      await sushiRoll.migrateWithPermit(
+      const transaction = await sushiRoll.migrateWithPermit(
         tokens[0],
         tokens[1],
         amountToMigrate.toFixed(0),
@@ -167,6 +154,9 @@ const MigrateUniswap: FC<{}> = ({}) => {
         r,
         s
       );
+      await transaction.wait();
+      setMigratePending(false);
+      setMigrationComplete(true);
     } catch (e: any) {
       setMigratePending(false);
     }
@@ -182,21 +172,27 @@ const MigrateUniswap: FC<{}> = ({}) => {
     tokens,
     setMigratePending,
     isInverted,
+    setMigrationComplete,
   ]);
 
-  const migrateWithAllowance = () => {
+  const migrateWithAllowance = async () => {
     if (canMigrate) {
       setMigratePending("approval");
-      sushiRoll
-        .migrate(
+      try {
+        const transaction = await sushiRoll.migrate(
           tokens[0],
           tokens[1],
           amountToMigrate.toFixed(0),
           minimumAmounts[isInverted ? 1 : 0].toFixed(0),
           minimumAmounts[isInverted ? 0 : 1].toFixed(0),
           (Math.floor(Date.now() / 1000) + 10 * 60).toString()
-        )
-        .catch(() => setMigratePending(false));
+        );
+        await transaction.wait();
+        setMigratePending(false);
+        setMigrationComplete(true);
+      } catch (e: any) {
+        setMigratePending(false);
+      }
     }
   };
 

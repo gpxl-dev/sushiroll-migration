@@ -2,6 +2,9 @@ import BigNumber from "bignumber.js";
 import { atom, atomFamily, selector } from "recoil";
 import { TokenInfo } from "../constants/tokens";
 
+// `null` in this file is generally used as a loading state for computed or
+// fetched values.
+
 export type TokenPair = [TokenInfo | null, TokenInfo | null];
 
 export const selectedTabFamily = atomFamily<number, string>({

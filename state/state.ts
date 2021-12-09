@@ -23,14 +23,14 @@ export const selectedTokensSelector = selector<[string | null, string | null]>({
     ],
 });
 
-export const userLPBalanceState = atom<BigNumber>({
+export const userLPBalanceState = atom<BigNumber | null>({
   key: "userLPBalance",
-  default: new BigNumber(0),
+  default: null,
 });
 
-export const lpTotalSupplyState = atom<BigNumber>({
+export const lpTotalSupplyState = atom<BigNumber | null>({
   key: "lpTotalSupply",
-  default: new BigNumber(0),
+  default: null,
 });
 
 // if token0 isn't selectedTokens[0]
@@ -42,9 +42,9 @@ export const lpIsInvertedSelector = selector<boolean>({
   },
 });
 
-export const lpReservesState = atom<[BigNumber, BigNumber]>({
+export const lpReservesState = atom<[BigNumber, BigNumber] | null>({
   key: "lpReserves",
-  default: [new BigNumber(0), new BigNumber(0)],
+  default: null,
 });
 
 export const userSlippageToleranceState = atom<number>({
@@ -52,11 +52,12 @@ export const userSlippageToleranceState = atom<number>({
   default: 0.02,
 });
 
-export const userLpShareSelector = selector<BigNumber>({
+export const userLpShareSelector = selector<BigNumber | null>({
   key: "userLPShare",
   get: ({ get }) => {
     const userLPBalance = get(userLPBalanceState);
     const lpTotalSupply = get(lpTotalSupplyState);
+    if (userLPBalance === null || lpTotalSupply === null) return null;
     if (userLPBalance.isEqualTo(0) || lpTotalSupply.isEqualTo(0))
       return new BigNumber(0);
     const userFraction = userLPBalance.dividedBy(lpTotalSupply);
@@ -64,13 +65,14 @@ export const userLpShareSelector = selector<BigNumber>({
   },
 });
 
-export const userTokensInLpSelector = selector<[BigNumber, BigNumber]>({
+export const userTokensInLpSelector = selector<[BigNumber, BigNumber] | null>({
   key: "userTokensInLP",
   get: ({ get }) => {
     const userLPShare = get(userLpShareSelector);
-    if (userLPShare.isEqualTo(0)) return [new BigNumber(0), new BigNumber(0)];
-    const lpIsInverted = get(lpIsInvertedSelector);
     const lpReserves = get(lpReservesState);
+    const lpIsInverted = get(lpIsInvertedSelector);
+    if (userLPShare === null || lpReserves === null) return null;
+    if (userLPShare.isEqualTo(0)) return [new BigNumber(0), new BigNumber(0)];
     const userTokens = lpReserves.map((reserve) =>
       reserve.multipliedBy(userLPShare)
     ) as [BigNumber, BigNumber];
@@ -83,11 +85,12 @@ export const fractionToRemoveState = atom<number>({
   default: 1,
 });
 
-export const minimumAmountsSelector = selector<[BigNumber, BigNumber]>({
+export const minimumAmountsSelector = selector<[BigNumber, BigNumber] | null>({
   key: "minimumAmounts",
   get: ({ get }) => {
     const lpReserves = get(lpReservesState);
     const userLpShare = get(userLpShareSelector);
+    if (userLpShare === null || lpReserves === null) return null;
     const shareToRemove = userLpShare.multipliedBy(get(fractionToRemoveState));
     if (userLpShare.isEqualTo(0) || lpReserves[0].isEqualTo(0))
       return [new BigNumber(0), new BigNumber(0)];

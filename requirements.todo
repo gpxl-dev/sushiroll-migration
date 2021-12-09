@@ -47,7 +47,16 @@ Todo:
   ✔ Please connect wallet component @done(21-12-09 10:05)
   ☐ Transaction completion listeners
   ☐ Error handlers
-  ☐ Loading state for values
+  ☐ Unsupported netwok
+  ✔ Loading state for values @done(21-12-09 10:24)
 
 Error handling:
   ☐ Quickly switch between tabs before things have loaded
+
+Things I'd improve:
+  ☐ update reserves & totalsupply regularly
+  ☐ componentise more things (e.g. range input), and make components more generic
+  ☐ a11y (aria attributes, tab order, etc.)
+  ☐ i18n
+  ☐ testing
+  ☐ cache values when switching back and forth between tabs

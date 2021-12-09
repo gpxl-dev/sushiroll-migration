@@ -23,6 +23,7 @@ import {
   userSlippageToleranceState,
   userTokensInLpSelector,
 } from "../../state/state";
+import FormattedBigNumberUnits from "../Numbers/FormattedBigNumberUnits";
 
 const UniswapLiquidityPosition: FC<{}> = ({}) => {
   const tokens = useRecoilValue(selectedTokensSelector);
@@ -90,19 +91,21 @@ const UniswapLiquidityPosition: FC<{}> = ({}) => {
       <span className="font-extrabold underline text-right text-sm self-end">
         LP Balance
       </span>
-      <span>{formatUnits(lpBalance.toFixed(0))}</span>
+      <FormattedBigNumberUnits value={lpBalance} decimals={18} />
       <span className="font-extrabold underline text-right text-sm self-end">
         {tokenInfo[0]?.symbol} in LP
       </span>
-      <span>
-        {formatUnits(userTokensInLp[0].toFixed(0), tokenInfo[0]?.decimals)}
-      </span>
+      <FormattedBigNumberUnits
+        value={userTokensInLp?.[0] || null}
+        decimals={tokenInfo[1]?.decimals || 18}
+      />
       <span className="font-extrabold underline text-right text-sm self-end">
         {tokenInfo[1]?.symbol} in LP
       </span>
-      <span>
-        {formatUnits(userTokensInLp[1].toFixed(0), tokenInfo[1]?.decimals)}
-      </span>
+      <FormattedBigNumberUnits
+        value={userTokensInLp?.[1] || null}
+        decimals={tokenInfo[1]?.decimals || 18}
+      />
       <span className="font-extrabold underline text-right text-sm self-end">
         Slippage tolerance
       </span>
@@ -150,15 +153,17 @@ const UniswapLiquidityPosition: FC<{}> = ({}) => {
       <span className="font-extrabold underline text-right text-sm self-end">
         Minimum {tokenInfo[0]?.symbol} removed
       </span>
-      <span>
-        {formatUnits(minTokens[0].toFixed(0), tokenInfo[0]?.decimals)}
-      </span>
+      <FormattedBigNumberUnits
+        value={minTokens?.[0] || null}
+        decimals={tokenInfo[0]?.decimals || 18}
+      />
       <span className="font-extrabold underline text-right text-sm self-end">
         Minimum {tokenInfo[1]?.symbol} removed
       </span>
-      <span>
-        {formatUnits(minTokens[1].toFixed(0), tokenInfo[1]?.decimals)}
-      </span>
+      <FormattedBigNumberUnits
+        value={minTokens?.[1] || null}
+        decimals={tokenInfo[1]?.decimals || 18}
+      />
     </div>
   );
 };

@@ -60,6 +60,7 @@ Things I'd improve:
   ☐ testing scripts
   ☐ Handle refreshing page, handle multiple concurrent migrations
   ☐ toast notifications
+  ☐ add switch chain buttons
 
 Deviations from spec:
   ☐ only one button with permit

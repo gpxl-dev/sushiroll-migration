@@ -1,12 +1,13 @@
-import { useWeb3React } from "@web3-react/core";
+import { UnsupportedChainIdError, useWeb3React } from "@web3-react/core";
 import { InjectedConnector } from "@web3-react/injected-connector";
 import { providers } from "ethers";
 import React, { FC } from "react";
 import truncateEthAddress from "truncate-eth-address";
 
 const WalletConnection: FC<{}> = ({}) => {
-  const { account, activate, deactivate } =
+  const { account, activate, deactivate, error } =
     useWeb3React<providers.Web3Provider>();
+  const unsupportedChain = error instanceof UnsupportedChainIdError;
 
   return (
     <div>
@@ -28,7 +29,7 @@ const WalletConnection: FC<{}> = ({}) => {
             activate(new InjectedConnector({ supportedChainIds: [1, 4, 42] }))
           }
         >
-          Connect wallet
+          {unsupportedChain ? "Unsupported Chain" : "Connect wallet"}
         </button>
       )}
     </div>

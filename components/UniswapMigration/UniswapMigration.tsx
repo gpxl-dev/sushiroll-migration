@@ -25,7 +25,6 @@ import { splitSignature } from "@ethersproject/bytes";
 import ErrorOverlay from "../ErrorOverlay/ErrorOverlay";
 import classNames from "classnames";
 import useFilteredEventListener from "../../hooks/useFilteredEventListener";
-import FormattedNumber from "../Numbers/FormattedBigNumberUnits";
 
 const UNISWAP_DOMAIN_INFO = {
   version: "1",

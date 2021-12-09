@@ -1,3 +1,4 @@
+import { UnsupportedChainIdError, useWeb3React } from "@web3-react/core";
 import classNames from "classnames";
 import type { NextPage } from "next";
 import React from "react";
@@ -14,9 +15,11 @@ import useResetAppState from "../hooks/useResetAppState";
 import { migrationCompleteState, selectedTabFamily } from "../state/state";
 
 const Home: NextPage = () => {
+  const { error } = useWeb3React();
   const currentTab = useRecoilValue(selectedTabFamily("main"));
   const complete = useRecoilValue(migrationCompleteState);
   const reset = useResetAppState();
+  const unsupportedChain = error instanceof UnsupportedChainIdError;
 
   return (
     <div className="relative flex flex-col max-w-2xl mx-auto pt-8">
@@ -38,6 +41,14 @@ const Home: NextPage = () => {
             </button>
           }
         />
+        <ErrorOverlay
+          show={unsupportedChain}
+          header="Unsupported network!"
+          paragraphs={[
+            "This prototype only supports Rinkeby and Mainnet",
+            "Please switch to a supported chain via MetaMask",
+          ]}
+        />
         <Tabs tabsId={"main"}>
           <Tab label={"Select tokens"}>
             <RequireWalletConnection>
@@ -55,7 +66,7 @@ const Home: NextPage = () => {
             </RequireWalletConnection>
           </Tab>
         </Tabs>
-        {!complete && (
+        {!complete && !unsupportedChain && (
           <NextPrevTabButton
             type="prev"
             tabsId="main"
@@ -71,7 +82,7 @@ const Home: NextPage = () => {
             &lt;
           </NextPrevTabButton>
         )}
-        {!complete && (
+        {!complete && !unsupportedChain && (
           <NextPrevTabButton
             type="next"
             tabsId="main"

@@ -12,10 +12,12 @@ import useUniswapPair from "../../hooks/useUniswapPair";
 import {
   amountToMigrateSelector,
   approvePendingState,
+  fractionToRemoveState,
   lpInvertedState,
   migratePendingState,
   migrationCompleteState,
   minimumAmountsSelector,
+  selectedTokensInfoState,
   selectedTokensSelector,
 } from "../../state/state";
 import BigNumber from "bignumber.js";
@@ -23,6 +25,7 @@ import { splitSignature } from "@ethersproject/bytes";
 import ErrorOverlay from "../ErrorOverlay/ErrorOverlay";
 import classNames from "classnames";
 import useFilteredEventListener from "../../hooks/useFilteredEventListener";
+import FormattedNumber from "../Numbers/FormattedBigNumberUnits";
 
 const UNISWAP_DOMAIN_INFO = {
   version: "1",
@@ -47,6 +50,8 @@ const EIP712_DOMAIN_TYPE = [
 const MigrateUniswap: FC<{}> = ({}) => {
   const { account, chainId, library } = useWeb3React<providers.Web3Provider>();
   const tokens = useRecoilValue(selectedTokensSelector);
+  const tokensInfo = useRecoilValue(selectedTokensInfoState);
+  const fractionToRemove = useRecoilValue(fractionToRemoveState);
   const isInverted = useRecoilValue(lpInvertedState);
   const pair = useUniswapPair(tokens[0], tokens[1]);
   const sushiRoll = useSushiRoll();
@@ -195,75 +200,94 @@ const MigrateUniswap: FC<{}> = ({}) => {
           "Please check your selections and try again",
         ]}
       />
-      <div className="flex flex-row items-center w-full">
-        <div className="flex flex-1 flex-col items-center justify-center p-6">
-          <button
-            className="relative"
-            disabled={!canMigrate || hasApproval || approvePending}
-            onClick={() => {
-              if (canMigrate) {
-                setApprovePending(true);
-                pair
-                  .approve(sushiRoll.address, amountToMigrate.toFixed(0))
-                  .catch(() => {
-                    setApprovePending(false);
-                  });
-              }
-            }}
-          >
-            <span
-              className={classNames({
-                "opacity-50": hasApproval || approvePending,
-              })}
-            >
-              Approve
-            </span>
-            {hasApproval && <span className="absolute ml-2">✓</span>}
-            {approvePending && (
-              <span className="absolute ml-2 animate-spin">.</span>
-            )}
-          </button>
-          <span className="text-2xl p-4">+</span>
-          <button
-            disabled={!hasApproval || !!migratePending}
-            className={classNames("relative transition-opacity duration-200", {
-              "opacity-40 cursor-not-allowed": !hasApproval,
-              "cursor-wait": migratePending,
-            })}
-            onClick={migrateWithAllowance}
-          >
-            <span
-              className={classNames({
-                "opacity-50": !hasApproval || migratePending,
-              })}
-            >
-              Migrate
-            </span>
-            {migratePending === "approval" && (
-              <span className="absolute ml-2 animate-spin">.</span>
-            )}
-          </button>
+      <div className="flex flex-col items-center">
+        <div className="text-sm max-w-md">
+          <p className="mb-2 mt-4">
+            Use this section to migrate {(fractionToRemove * 100).toFixed(1)}%
+            of your {tokensInfo[0]?.symbol}-{tokensInfo[1]?.symbol} liquidity
+            from Uniswap to SushiSwap
+          </p>
+          <p className="mb-4">
+            You can either use a separate approval transaction, or sign an
+            approval permit and approve and migrate in a single transaction.
+          </p>
         </div>
-        <div>-OR-</div>
-        <div className="flex flex-1 items-center justify-center p-6">
-          <button
-            disabled={!!migratePending}
-            className={classNames("relative transition-opacity duration-200", {
-              "cursor-wait": !!migratePending,
-            })}
-            onClick={migrateWithPermit}
-          >
-            <span
-              className={classNames({
-                "opacity-50": migratePending,
-              })}
+        <div className="flex flex-row items-center w-full">
+          <div className="flex flex-1 flex-col items-center justify-center p-6">
+            <button
+              className="relative"
+              disabled={!canMigrate || hasApproval || approvePending}
+              onClick={() => {
+                if (canMigrate) {
+                  setApprovePending(true);
+                  pair
+                    .approve(sushiRoll.address, amountToMigrate.toFixed(0))
+                    .catch(() => {
+                      setApprovePending(false);
+                    });
+                }
+              }}
             >
-              Migrate
-            </span>
-            {migratePending === "permit" && (
-              <span className="absolute ml-2 animate-spin">.</span>
-            )}
-          </button>
+              <span
+                className={classNames({
+                  "opacity-50": hasApproval || approvePending,
+                })}
+              >
+                Approve
+              </span>
+              {hasApproval && <span className="absolute ml-2">✓</span>}
+              {approvePending && (
+                <span className="absolute ml-2 animate-spin">.</span>
+              )}
+            </button>
+            <span className="text-2xl p-4">+</span>
+            <button
+              disabled={!hasApproval || !!migratePending}
+              className={classNames(
+                "relative transition-opacity duration-200",
+                {
+                  "opacity-40 cursor-not-allowed": !hasApproval,
+                  "cursor-wait": migratePending,
+                }
+              )}
+              onClick={migrateWithAllowance}
+            >
+              <span
+                className={classNames({
+                  "opacity-50": !hasApproval || migratePending,
+                })}
+              >
+                Migrate
+              </span>
+              {migratePending === "approval" && (
+                <span className="absolute ml-2 animate-spin">.</span>
+              )}
+            </button>
+          </div>
+          <div>-OR-</div>
+          <div className="flex flex-1 items-center justify-center p-6">
+            <button
+              disabled={!!migratePending}
+              className={classNames(
+                "relative transition-opacity duration-200",
+                {
+                  "cursor-wait": !!migratePending,
+                }
+              )}
+              onClick={migrateWithPermit}
+            >
+              <span
+                className={classNames({
+                  "opacity-50": migratePending,
+                })}
+              >
+                Migrate
+              </span>
+              {migratePending === "permit" && (
+                <span className="absolute ml-2 animate-spin">.</span>
+              )}
+            </button>
+          </div>
         </div>
       </div>
     </div>

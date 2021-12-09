@@ -1,5 +1,5 @@
 import { BigNumber } from "bignumber.js";
-import { BigNumber as EthersBigNumber } from "ethers";
+import { BigNumber as EthersBigNumber, constants } from "ethers";
 import { formatUnits } from "@ethersproject/units";
 import { useWeb3React } from "@web3-react/core";
 import { providers } from "ethers";
@@ -17,6 +17,7 @@ import {
   lpReservesState,
   lpTotalSupplyState,
   minimumAmountsSelector,
+  noLPErrorState,
   selectedTokensInfo,
   selectedTokensSelector,
   userLPBalanceState,
@@ -24,12 +25,15 @@ import {
   userTokensInLpSelector,
 } from "../../state/state";
 import FormattedBigNumberUnits from "../Numbers/FormattedBigNumberUnits";
+import ErrorOverlay from "../ErrorOverlay/ErrorOverlay";
 
 const UniswapLiquidityPosition: FC<{}> = ({}) => {
   const tokens = useRecoilValue(selectedTokensSelector);
+  const twoTokensSelected = tokens.filter((t) => t !== null).length === 2;
   const pair = useUniswapPair(tokens[0], tokens[1]);
   const { account } = useWeb3React<providers.Web3Provider>();
 
+  const [noLP, setNoLP] = useRecoilState(noLPErrorState);
   const [lpBalance, setLpBalance] = useRecoilState(userLPBalanceState);
   const resetLpBalance = useResetRecoilState(userLPBalanceState);
   const setLpReserves = useSetRecoilState(lpReservesState);
@@ -48,11 +52,15 @@ const UniswapLiquidityPosition: FC<{}> = ({}) => {
   const tokenInfo = useRecoilValue(selectedTokensInfo);
 
   useEffect(() => {
-    if (!pair || !account) {
+    if (!pair || !account || noLP) {
       resetLpBalance();
       return;
     } else {
       resetLpBalance();
+      if (pair.address === constants.AddressZero) {
+        if (twoTokensSelected) setNoLP(true);
+        return;
+      }
       pair.balanceOf(account).then((balance: EthersBigNumber) => {
         setLpBalance(new BigNumber(balance.toString()));
       });
@@ -83,11 +91,29 @@ const UniswapLiquidityPosition: FC<{}> = ({}) => {
     resetLpBalance,
     resetLpReserves,
     resetLpTotalSupply,
+    setNoLP,
+    noLP,
+    twoTokensSelected,
   ]);
 
   return (
     // TODO: Decimal values should be floored.
-    <div className="grid grid-cols-2 gap-x-4 gap-y-2">
+    <div className="relative grid grid-cols-2 gap-x-4 gap-y-2">
+      <ErrorOverlay
+        header={"This doesn't seem right..."}
+        paragraphs={[
+          "The token pair you have selected has no liquidity pool on Uniswap",
+          "Please check your selection and try again",
+        ]}
+        show={noLP}
+      />
+      <ErrorOverlay
+        header={"Please select two tokens"}
+        paragraphs={[
+          "Before we can check your liquidity position you will need to select tow tokens from the previous tab",
+        ]}
+        show={!twoTokensSelected}
+      />
       <span className="font-extrabold underline text-right text-sm self-end">
         LP Balance
       </span>

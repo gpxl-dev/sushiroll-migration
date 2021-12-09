@@ -14,6 +14,11 @@ export const selectedTokensInfo = atom<TokenPair>({
   default: [null, null],
 });
 
+export const noLPErrorState = atom<boolean>({
+  key: "noLPError",
+  default: false,
+});
+
 export const selectedTokensSelector = selector<[string | null, string | null]>({
   key: "selectedTokens",
   get: ({ get }) =>
@@ -83,6 +88,17 @@ export const userTokensInLpSelector = selector<[BigNumber, BigNumber] | null>({
 export const fractionToRemoveState = atom<number>({
   key: "fractionToRemove",
   default: 1,
+});
+
+export const amountToMigrateSelector = selector<BigNumber | null>({
+  key: "amountToMigrate",
+  get: ({ get }) => {
+    const fraction = get(fractionToRemoveState);
+    const lpBalance = get(userLPBalanceState);
+    if (lpBalance === null) return null;
+
+    return lpBalance.multipliedBy(fraction);
+  },
 });
 
 export const minimumAmountsSelector = selector<[BigNumber, BigNumber] | null>({

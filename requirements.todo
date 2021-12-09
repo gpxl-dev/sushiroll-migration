@@ -45,6 +45,7 @@ FEATURE D.2: migrate with signature:
 
 Todo:
   ✔ Please connect wallet component @done(21-12-09 10:05)
+  ☐ No tokens selected state
   ☐ Transaction completion listeners
   ☐ Error handlers
   ☐ Unsupported netwok
@@ -52,6 +53,8 @@ Todo:
 
 Error handling:
   ☐ Quickly switch between tabs before things have loaded
+  ☐ Allowance on a bad pair
+  ☐ Assume network[1] - reset tab if connect => network[4]
 
 Things I'd improve:
   ☐ update reserves & totalsupply regularly
@@ -60,3 +63,6 @@ Things I'd improve:
   ☐ i18n
   ☐ testing
   ☐ cache values when switching back and forth between tabs
+
+Deviations from spec:
+  ☐

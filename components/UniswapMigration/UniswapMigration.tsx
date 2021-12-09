@@ -1,16 +1,19 @@
 import { useWeb3React } from "@web3-react/core";
 import React, { FC, useCallback, useEffect, useState } from "react";
-import { BigNumber as EthersBigNumber, providers } from "ethers";
+import { BigNumber as EthersBigNumber, constants, providers } from "ethers";
 import { useRecoilValue } from "recoil";
 import useSushiRoll from "../../hooks/useSushiRoll";
 import useUniswapPair from "../../hooks/useUniswapPair";
 import {
+  amountToMigrateSelector,
+  fractionToRemoveState,
   minimumAmountsSelector,
   selectedTokensSelector,
   userLPBalanceState,
 } from "../../state/state";
 import BigNumber from "bignumber.js";
 import { splitSignature } from "@ethersproject/bytes";
+import ErrorOverlay from "../ErrorOverlay/ErrorOverlay";
 
 const UNISWAP_DOMAIN_INFO = {
   version: "1",
@@ -65,15 +68,23 @@ const MigrateUniswap: FC<{}> = ({}) => {
   const tokens = useRecoilValue(selectedTokensSelector);
   const pair = useUniswapPair(tokens[0], tokens[1]);
   const sushiRoll = useSushiRoll();
-  // TODO:
-  const migrateFraction = 1;
   const minimumAmouts = useRecoilValue(minimumAmountsSelector);
-  const amountToMigrate = useRecoilValue(userLPBalanceState);
+  const amountToMigrate = useRecoilValue(amountToMigrateSelector);
+
+  const canMigrate =
+    !!sushiRoll &&
+    chainId &&
+    account &&
+    pair &&
+    pair.address !== constants.AddressZero &&
+    amountToMigrate !== null &&
+    amountToMigrate.gt(0) &&
+    minimumAmouts !== null;
 
   const [hasApproval, setHasApproval] = useState<boolean>(false);
 
   useEffect(() => {
-    if (!pair || !sushiRoll) return;
+    if (!canMigrate) return;
     pair
       .allowance(account, sushiRoll.address)
       .then((allowance: EthersBigNumber) => {
@@ -83,10 +94,10 @@ const MigrateUniswap: FC<{}> = ({}) => {
           )
         );
       });
-  }, [pair, account, amountToMigrate, sushiRoll]);
+  }, [pair, account, sushiRoll, amountToMigrate, canMigrate]);
 
   const migrateWithPermit = useCallback(async () => {
-    if (!pair || !chainId || !sushiRoll) {
+    if (!canMigrate) {
       return;
     }
 
@@ -125,6 +136,7 @@ const MigrateUniswap: FC<{}> = ({}) => {
     pair,
     chainId,
     account,
+    canMigrate,
     amountToMigrate,
     sushiRoll,
     library,
@@ -132,13 +144,35 @@ const MigrateUniswap: FC<{}> = ({}) => {
     tokens,
   ]);
 
+  const migrateWithAllowance = () => {
+    if (canMigrate) {
+      sushiRoll.migrate(
+        tokens[0],
+        tokens[1],
+        amountToMigrate.toFixed(0),
+        minimumAmouts[0].toFixed(0),
+        minimumAmouts[1].toFixed(0),
+        (Math.floor(Date.now() / 1000) + 10 * 60).toString()
+      );
+    }
+  };
+
   return (
-    <div>
+    <div className="relative w-full">
+      <ErrorOverlay
+        show={!canMigrate}
+        header="Nothing to migrate"
+        paragraphs={[
+          "Based on the parameters you've selected, there's nothing we can migrate for you right now",
+          "Please check your selections and try again",
+        ]}
+      />
       {!hasApproval ? (
         <>
           <button
+            disabled={!canMigrate}
             onClick={() => {
-              if (pair && sushiRoll && account) {
+              if (canMigrate) {
                 pair.approve(sushiRoll.address, amountToMigrate.toFixed(0));
               }
             }}
@@ -148,20 +182,7 @@ const MigrateUniswap: FC<{}> = ({}) => {
           <button onClick={migrateWithPermit}>MigrateWithPermit</button>
         </>
       ) : (
-        <button
-          onClick={() => {
-            if (pair && sushiRoll && account) {
-              sushiRoll.migrate(
-                tokens[0],
-                tokens[1],
-                amountToMigrate.toFixed(0),
-                minimumAmouts[0].toFixed(0),
-                minimumAmouts[1].toFixed(0),
-                (Math.floor(Date.now() / 1000) + 10 * 60).toString()
-              );
-            }
-          }}
-        >
+        <button disabled={!canMigrate} onClick={migrateWithAllowance}>
           Migrate
         </button>
       )}

@@ -5,6 +5,7 @@ import allTokens, { TokenInfo } from "../../constants/tokens";
 import classNames from "classnames";
 import { useRecoilValue, useSetRecoilState } from "recoil";
 import {
+  noLPErrorState,
   selectedTokensInfo,
   selectedTokensSelector,
   TokenPair,
@@ -16,12 +17,14 @@ const TokenList: FC<{}> = ({}) => {
     useState<boolean>(false);
   const selectedTokens = useRecoilValue(selectedTokensSelector);
   const setSelectedTokens = useSetRecoilState(selectedTokensInfo);
+  const setNoLp = useSetRecoilState(noLPErrorState);
 
   const onTokenClick = (
     token: TokenInfo,
     isSelected: boolean,
     numSelected: number
   ) => {
+    setNoLp(false);
     setSelectedTokens((prev) => {
       // if already selected, deselect.
       if (isSelected)

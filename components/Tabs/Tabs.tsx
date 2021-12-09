@@ -8,7 +8,7 @@ interface TabProps {
 }
 
 export const Tab: FC<TabProps> = ({ children }) => {
-  return <section>{children}</section>;
+  return <section className="contents">{children}</section>;
 };
 
 export const Tabs: FC<{
@@ -55,13 +55,16 @@ export const Tabs: FC<{
         ))}
       </div>
       <div className="p-8">
-        {childrenAsArray.map((child, i) =>
-          activeIndex === i ? (
-            <div key={i} className={classnames("flex flex-col items-center")}>
-              {child}
-            </div>
-          ) : null
-        )}
+        {childrenAsArray.map((child, i) => (
+          <div
+            key={i}
+            className={classnames("flex flex-col items-center", {
+              hidden: activeIndex !== i,
+            })}
+          >
+            {child}
+          </div>
+        ))}
       </div>
     </div>
   );

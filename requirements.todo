@@ -31,7 +31,7 @@ FEATURE C: Uniswap LP Position:
     ☐ Error handling if no pair
 
 FEATURE D.1: migrate from uniswap to sushiswap:
-  ☐ Users are required to input the amount of LP tokens to be migrated (out of max amount in uniswap)
+  ✔ Users are required to input the amount of LP tokens to be migrated (out of max amount in uniswap) @done(21-12-09 09:48)
   ✔ amountAMin and amountBMin for calling function migrateWithPermit is automatically calculated (they shouldn't be 0!) @done(21-12-07 23:25)
   ✔ deadline is automatically set to 10 minutes later than local time @done(21-12-08 11:48)
   ✔ Users click 'Migrate' button to call function SushiRoll.migrate() @done(21-12-08 11:48)
@@ -42,3 +42,12 @@ FEATURE D.2: migrate with signature:
   ✔ Let the user sign the migrate request with MetaMask (you can use this package if needed) @done(21-12-08 19:11)
   ☐ Users click 'Migrate' button to call function SushiRoll.migrateWithPermit
   ☐ When the transaction is confirmed, the page should be refreshed
+
+Todo:
+  ✔ Please connect wallet component @done(21-12-09 10:05)
+  ☐ Transaction completion listeners
+  ☐ Error handlers
+  ☐ Loading state for values
+
+Error handling:
+  ☐ Quickly switch between tabs before things have loaded

@@ -5,12 +5,23 @@ import React, { FC } from "react";
 import truncateEthAddress from "truncate-eth-address";
 
 const WalletConnection: FC<{}> = ({}) => {
-  const { account, activate } = useWeb3React<providers.Web3Provider>();
+  const { account, activate, deactivate } =
+    useWeb3React<providers.Web3Provider>();
 
   return (
     <div>
       {account ? (
-        <div>{truncateEthAddress(account)}</div>
+        <div>
+          {truncateEthAddress(account)}
+          <button
+            className="font-black pl-2 text-red-500 grayscale-[50%]"
+            onClick={() => {
+              deactivate();
+            }}
+          >
+            ✕
+          </button>
+        </div>
       ) : (
         <button
           onClick={() =>

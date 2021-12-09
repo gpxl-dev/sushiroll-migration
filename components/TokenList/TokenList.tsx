@@ -70,7 +70,8 @@ const TokenList: FC<{}> = ({}) => {
               <span
                 className={classNames(
                   "w-9 h-9",
-                  "border border-black rounded-full drop-shadow-hard"
+                  "border border-black rounded-full drop-shadow-hard",
+                  "grayscale-[60%]"
                 )}
               >
                 <Image

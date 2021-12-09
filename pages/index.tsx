@@ -12,25 +12,30 @@ import TokenList from "../components/TokenList/TokenList";
 import UniswapLiquidityPosition from "../components/UniswapLiquidityPosition/UniswapLiquidityPosition";
 import MigrateUniswap from "../components/UniswapMigration/UniswapMigration";
 import WalletConnection from "../components/WalletConnection/WalletConnection";
+import RequireWalletConnection from "../components/WalletConnection/RequireWalletConnection";
 import { selectedTabFamily } from "../state/state";
 
 const Home: NextPage = () => {
   const currentTab = useRecoilValue(selectedTabFamily("main"));
   return (
     <div className="relative flex flex-col max-w-2xl mx-auto pt-8">
-      <header>
-        <h1 className="text-2xl mb-4">Migrate liquidity using SushiRoll</h1>
+      <header className="flex flex-row justify-between items-center  mb-4">
+        <h1 className="text-2xl">Migrate liquidity using SushiRoll</h1>
+        <WalletConnection />
       </header>
-      <WalletConnection />
       <Tabs tabsId={"main"}>
         <Tab label={"Select tokens"}>
           <TokenList />
         </Tab>
         <Tab label={"Configure migration"}>
-          <UniswapLiquidityPosition />
+          <RequireWalletConnection>
+            <UniswapLiquidityPosition />
+          </RequireWalletConnection>
         </Tab>
         <Tab label={"Execute"}>
-          <MigrateUniswap />
+          <RequireWalletConnection>
+            <MigrateUniswap />
+          </RequireWalletConnection>
         </Tab>
       </Tabs>
       <NextPrevTabButton

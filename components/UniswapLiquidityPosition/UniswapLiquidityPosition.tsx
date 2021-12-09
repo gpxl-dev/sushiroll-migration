@@ -140,7 +140,7 @@ const UniswapLiquidityPosition: FC<{}> = ({}) => {
       <span className="font-extrabold underline text-right text-sm self-end">
         Slippage tolerance
       </span>
-      <div className="flex flex-row gap-2">
+      <div className="flex flex-row gap-2 ml-2">
         <button
           className="rounded-full border border-black w-4 h-4 flex items-center justify-center self-center"
           onClick={() => {
@@ -162,7 +162,7 @@ const UniswapLiquidityPosition: FC<{}> = ({}) => {
       <span className="font-extrabold underline text-right text-sm self-end">
         Amount of liquidity to migrate
       </span>
-      <div className="flex flex-row gap-2">
+      <div className="flex flex-row gap-2 ml-2">
         <button
           className="rounded-full border border-black w-4 h-4 flex items-center justify-center self-center"
           onClick={() => {

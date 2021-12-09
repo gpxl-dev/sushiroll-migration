@@ -24,7 +24,10 @@ const TokenList: FC<{}> = ({}) => {
     isSelected: boolean,
     numSelected: number
   ) => {
+    // Clear the "No liquidity pair" error state if tokens are changed to ensure
+    // we re-attempt fetching the pair contract.
     setNoLp(false);
+
     setSelectedTokens((prev) => {
       // if already selected, deselect.
       if (isSelected)
@@ -32,6 +35,7 @@ const TokenList: FC<{}> = ({}) => {
           t?.address === token.address ? null : t
         ) as TokenPair;
 
+      // If there's a gap, fill it left to right.
       if (!numSelected) return [token, null];
 
       if (numSelected === 1) {
@@ -39,7 +43,8 @@ const TokenList: FC<{}> = ({}) => {
         return prev.map((t) => (t === null ? token : t)) as TokenPair;
       }
 
-      // two are selected
+      // Two other tokens are selected, replace the one we set longest ago for
+      // the most natural experience, and make a note of which token we set last
       if (!firstTokenWasLastSet) {
         setFirstTokenWasLastSet(true);
         return [token, prev[1]];
@@ -51,6 +56,7 @@ const TokenList: FC<{}> = ({}) => {
   };
 
   const tokens = allTokens[chainId || 1];
+
   return (
     <div className="flex flex-col">
       <div className="grid grid-cols-2 gap-x-12 gap-y-2 self-center">

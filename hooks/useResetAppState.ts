@@ -6,6 +6,9 @@ import {
   selectedTokensInfoState,
 } from "../state/state";
 
+/**
+ * Returns a function to reset the app state.
+ */
 const useResetAppState = () => {
   const resetComplete = useResetRecoilState(migrationCompleteState);
   const setTab = useSetRecoilState(selectedTabFamily("main"));

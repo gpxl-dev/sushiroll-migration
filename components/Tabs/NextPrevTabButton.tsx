@@ -2,6 +2,9 @@ import React, { FC } from "react";
 import { useSetRecoilState } from "recoil";
 import { selectedTabFamily } from "../../state/state";
 
+/**
+ * Button for navigating between `Tab`s in `Tabs` component.
+ */
 const NextPrevTabButton: FC<{
   tabsId: string;
   type: "next" | "prev";

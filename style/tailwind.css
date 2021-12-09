@@ -17,3 +17,14 @@
     @apply font-serif;
   }
 }
+
+@layer components {
+  .table-label {
+    @apply font-extrabold underline text-right text-sm self-end;
+  }
+  .small-round-button {
+    @apply w-4 h-4;
+    @apply rounded-full border border-black;
+    @apply flex items-center justify-center self-center;
+  }
+}

@@ -58,7 +58,7 @@ Things I'd improve:
   ☐ i18n
   ☐ testing scripts
   ☐ Handle refreshing page, handle multiple concurrent migrations
-  ☐ toast notifications
+  ☐ toast notifications, especially for errors.
   ☐ add switch chain buttons
 
 Deviations from spec:

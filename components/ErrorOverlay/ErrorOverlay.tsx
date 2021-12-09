@@ -1,5 +1,9 @@
 import React, { FC, ReactNode } from "react";
 
+/**
+ * Renders an overlay when `show` condition is true. Note that this should be
+ * placed within a parent element with `position: relative`.
+ */
 const ErrorOverlay: FC<{
   header: string;
   paragraphs: string[];

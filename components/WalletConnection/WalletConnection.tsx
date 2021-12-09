@@ -4,6 +4,9 @@ import { providers } from "ethers";
 import React, { FC } from "react";
 import truncateEthAddress from "truncate-eth-address";
 
+/**
+ * Simple wallet connect button / wallet address display
+ */
 const WalletConnection: FC<{}> = ({}) => {
   const { account, activate, deactivate, error } =
     useWeb3React<providers.Web3Provider>();

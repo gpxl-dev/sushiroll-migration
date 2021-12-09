@@ -11,6 +11,10 @@ export const Tab: FC<TabProps> = ({ children }) => {
   return <section className="contents">{children}</section>;
 };
 
+/**
+ * Simple tabs component. Requires a recoil state family param `tabsId` to
+ * store current tab state to allow external navigation.
+ */
 export const Tabs: FC<{
   children: ReactElement<TabProps> | Array<ReactElement<TabProps>>;
   className?: string;

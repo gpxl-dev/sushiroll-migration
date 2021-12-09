@@ -24,6 +24,7 @@ import {
   selectedTokensInfoState,
   selectedTokensSelector,
 } from "../../state/state";
+import ButtonWithLoader from "../ButtonWithLoader/ButtonWithLoader";
 import ErrorOverlay from "../ErrorOverlay/ErrorOverlay";
 
 const UNISWAP_DOMAIN_INFO = {
@@ -39,29 +40,31 @@ const EIP2612_PERMIT_TYPE = [
   { name: "deadline", type: "uint256" },
 ];
 
-const EIP712_DOMAIN_TYPE = [
-  { name: "name", type: "string" },
-  { name: "version", type: "string" },
-  { name: "chainId", type: "uint256" },
-  { name: "verifyingContract", type: "address" },
-];
-
 const MigrateUniswap: FC<{}> = ({}) => {
   const { account, chainId, library } = useWeb3React<providers.Web3Provider>();
+
+  // Tokens
   const tokens = useRecoilValue(selectedTokensSelector);
   const tokensInfo = useRecoilValue(selectedTokensInfoState);
-  const fractionToRemove = useRecoilValue(fractionToRemoveState);
   const isInverted = useRecoilValue(lpInvertedState);
+
+  // Contracts
   const pair = useUniswapPair(tokens[0], tokens[1]);
   const sushiRoll = useSushiRoll();
+
+  // Computed values
+  const fractionToRemove = useRecoilValue(fractionToRemoveState);
   const minimumAmounts = useRecoilValue(minimumAmountsSelector);
   const amountToMigrate = useRecoilValue(amountToMigrateSelector);
+
+  // Loading state
   const [approvePending, setApprovePending] =
     useRecoilState(approvePendingState);
   const [migratePending, setMigratePending] =
     useRecoilState(migratePendingState);
   const setMigrationComplete = useSetRecoilState(migrationCompleteState);
 
+  // True if we have everything we need.
   const canMigrate =
     !!sushiRoll &&
     chainId &&
@@ -74,6 +77,7 @@ const MigrateUniswap: FC<{}> = ({}) => {
 
   const [allowance, setAllowance] = useState<BigNumber>(new BigNumber(0));
 
+  // Filter for approval events so we can enable the migrate button once approved
   const approvalFilter = useMemo(() => {
     if (!pair || !sushiRoll) return null;
     // Approval(owner, spender, value)
@@ -93,6 +97,7 @@ const MigrateUniswap: FC<{}> = ({}) => {
 
   useFilteredEventListener(approvalFilter, onApproval);
 
+  // On success, LP tokens will be transferred to sushiroll.
   const transferFilter = useMemo(() => {
     if (!pair || !sushiRoll) return null;
     // Transfer(from, to, value)
@@ -105,6 +110,7 @@ const MigrateUniswap: FC<{}> = ({}) => {
   }, [setMigratePending, setMigrationComplete]);
   useFilteredEventListener(transferFilter, onTransfer);
 
+  // Get existing allowance.
   useEffect(() => {
     if (!canMigrate) return;
     pair
@@ -113,6 +119,15 @@ const MigrateUniswap: FC<{}> = ({}) => {
         setAllowance(new BigNumber(allowance.toString()));
       });
   }, [pair, account, sushiRoll, amountToMigrate, canMigrate]);
+
+  const approve = useCallback(() => {
+    if (canMigrate) {
+      setApprovePending(true);
+      pair.approve(sushiRoll.address, amountToMigrate.toFixed(0)).catch(() => {
+        setApprovePending(false);
+      });
+    }
+  }, [amountToMigrate, canMigrate, pair, setApprovePending, sushiRoll]);
 
   const migrateWithPermit = useCallback(async () => {
     if (!canMigrate) {
@@ -213,79 +228,34 @@ const MigrateUniswap: FC<{}> = ({}) => {
         </div>
         <div className="flex flex-row items-center w-full">
           <div className="flex flex-1 flex-col items-center justify-center p-6">
-            <button
-              className="relative"
-              disabled={!canMigrate || hasApproval || approvePending}
-              onClick={() => {
-                if (canMigrate) {
-                  setApprovePending(true);
-                  pair
-                    .approve(sushiRoll.address, amountToMigrate.toFixed(0))
-                    .catch(() => {
-                      setApprovePending(false);
-                    });
-                }
-              }}
+            <ButtonWithLoader
+              onClick={approve}
+              disabled={!canMigrate || hasApproval}
+              loading={approvePending}
+              done={hasApproval}
             >
-              <span
-                className={classNames({
-                  "opacity-50": hasApproval || approvePending,
-                })}
-              >
-                Approve
-              </span>
-              {hasApproval && <span className="absolute ml-2">✓</span>}
-              {approvePending && (
-                <span className="absolute ml-2 animate-spin">.</span>
-              )}
-            </button>
+              Approve
+            </ButtonWithLoader>
             <span className="text-2xl p-4">+</span>
-            <button
-              disabled={!hasApproval || !!migratePending}
-              className={classNames(
-                "relative transition-opacity duration-200",
-                {
-                  "opacity-40 cursor-not-allowed": !hasApproval,
-                  "cursor-wait": migratePending,
-                }
-              )}
+            <ButtonWithLoader
               onClick={migrateWithAllowance}
+              disabled={
+                !canMigrate || !hasApproval || migratePending === "permit"
+              }
+              loading={migratePending === "approval"}
             >
-              <span
-                className={classNames({
-                  "opacity-50": !hasApproval || migratePending,
-                })}
-              >
-                Migrate
-              </span>
-              {migratePending === "approval" && (
-                <span className="absolute ml-2 animate-spin">.</span>
-              )}
-            </button>
+              Migrate
+            </ButtonWithLoader>
           </div>
           <div>-OR-</div>
           <div className="flex flex-1 items-center justify-center p-6">
-            <button
-              disabled={!!migratePending}
-              className={classNames(
-                "relative transition-opacity duration-200",
-                {
-                  "cursor-wait": !!migratePending,
-                }
-              )}
+            <ButtonWithLoader
               onClick={migrateWithPermit}
+              disabled={!canMigrate || migratePending === "approval"}
+              loading={migratePending === "permit"}
             >
-              <span
-                className={classNames({
-                  "opacity-50": migratePending,
-                })}
-              >
-                Migrate
-              </span>
-              {migratePending === "permit" && (
-                <span className="absolute ml-2 animate-spin">.</span>
-              )}
-            </button>
+              Migrate with permit
+            </ButtonWithLoader>
           </div>
         </div>
       </div>

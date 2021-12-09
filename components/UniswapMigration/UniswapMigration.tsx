@@ -6,7 +6,7 @@ import useSushiRoll from "../../hooks/useSushiRoll";
 import useUniswapPair from "../../hooks/useUniswapPair";
 import {
   minimumAmountsSelector,
-  selectedTokensState,
+  selectedTokensSelector,
   userLPBalanceState,
 } from "../../state/state";
 import BigNumber from "bignumber.js";
@@ -62,7 +62,7 @@ const getPermitTypedData: (
 
 const MigrateUniswap: FC<{}> = ({}) => {
   const { account, chainId, library } = useWeb3React<providers.Web3Provider>();
-  const tokens = useRecoilValue(selectedTokensState);
+  const tokens = useRecoilValue(selectedTokensSelector);
   const pair = useUniswapPair(tokens[0], tokens[1]);
   const sushiRoll = useSushiRoll();
   // TODO:

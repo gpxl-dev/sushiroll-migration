@@ -8,23 +8,27 @@ REQUIREMENTS:
   ✔ Components must use Tailwind CSS for styling @done(21-12-07 08:52)
 
 FEATURE A: Tabs navigation component:
-  ☐ Features B/C/D below should each be on its own tab
-  ☐ The component should be reusable for potentially other pages and not specific to the content in this assignment
+  ✔ Features B/C/D below should each be on its own tab @done(21-12-08 23:33)
+  ✔ The component should be reusable for potentially other pages and not specific to the content in this assignment @done(21-12-08 23:34)
   ✔ It will require state management of some kind (up to you what you’d like to use) @done(21-12-07 09:45)
-  ☐ There should be an “active tab” style
-  ☐ Clicking on a tab should navigate to that section.
-  ☐ Also, next/prev buttons should be available to navigate tabs.
+  ✔ There should be an “active tab” style @done(21-12-08 23:34)
+  ✔ Clicking on a tab should navigate to that section. @done(21-12-08 23:34)
+  ✔ Also, next/prev buttons should be available to navigate tabs. @done(21-12-08 23:34)
 
 FEATURE B: Token List:
-  ☐ Users are able to see the pre-selected list of ERC20 tokens with name, symbol and address displayed (dev can choose their favorite 10 tokens listed in sushiswap)
-  ☐ Each list item can have a 'Copy Address' button or you can provide another way to get those token addresses to the next feature
+  ✔ Users are able to see the pre-selected list of ERC20 tokens with name, symbol and address displayed (dev can choose their favorite 10 tokens listed in sushiswap) @done(21-12-08 23:41)
+    ☐ Address not done
+  ✔ Each list item can have a 'Copy Address' button or you can provide another way to get those token addresses to the next feature @done(21-12-08 23:34)
 
 FEATURE C: Uniswap LP Position:
-  ☐ Users first need to be able to copy and paste 2 token addresses from the token list
+  ✔ Users first need to be able to copy and paste 2 token addresses from the token list @done(21-12-08 23:34)
   ✔ Frontend shows the uniswap LP position of those two tokens if exists @done(21-12-07 23:24)
     ✘ dev can use this function for creating Pair object if needed @cancelled(21-12-07 23:25)
       https://github.com/Uniswap/uniswap-v2-sdk/blob/main/src/entities/pair.ts#L34
   ✔ users are able to see the amount of LP tokens deposited @done(21-12-07 23:24)
+
+  Extras:
+    ☐ Error handling if no pair
 
 FEATURE D.1: migrate from uniswap to sushiswap:
   ☐ Users are required to input the amount of LP tokens to be migrated (out of max amount in uniswap)

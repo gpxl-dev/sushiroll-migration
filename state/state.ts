@@ -1,27 +1,26 @@
 import BigNumber from "bignumber.js";
-import { atom, selector } from "recoil";
+import { atom, atomFamily, selector } from "recoil";
+import { TokenInfo } from "../constants/tokens";
 
-export const selectedTokensState = atom<[string | null, string | null]>({
-  key: "selectedTokens",
-  // default: [null, null],
-  default: [
-    "0x1f9840a85d5af5bf1d1762f925bdaddc4201f984",
-    "0xc778417e063141139fce010982780140aa0cd5ab",
-  ],
+export type TokenPair = [TokenInfo | null, TokenInfo | null];
+
+export const selectedTabFamily = atomFamily<number, string>({
+  key: "SelectedTab",
+  default: 0,
 });
 
-type TokenInfo = {
-  symbol: string;
-  decimals: number;
-};
-
-export const selectedTokensInfo = atom<[TokenInfo | null, TokenInfo | null]>({
+export const selectedTokensInfo = atom<TokenPair>({
   key: "selectedTokensInfo",
-  // default: [null, null],
-  default: [
-    { symbol: "UNI", decimals: 18 },
-    { symbol: "WETH", decimals: 18 },
-  ],
+  default: [null, null],
+});
+
+export const selectedTokensSelector = selector<[string | null, string | null]>({
+  key: "selectedTokens",
+  get: ({ get }) =>
+    get(selectedTokensInfo).map((t) => t?.address || null) as [
+      string | null,
+      string | null
+    ],
 });
 
 export const userLPBalanceState = atom<BigNumber>({
@@ -38,7 +37,7 @@ export const lpTotalSupplyState = atom<BigNumber>({
 export const lpIsInvertedSelector = selector<boolean>({
   key: "lpIsInverted",
   get: ({ get }) => {
-    const [token0, token1] = get(selectedTokensState);
+    const [token0, token1] = get(selectedTokensSelector);
     return new BigNumber(token0 || 0).isGreaterThanOrEqualTo(token1 || 0);
   },
 });
@@ -79,13 +78,17 @@ export const userTokensInLpSelector = selector<[BigNumber, BigNumber]>({
   },
 });
 
-// export const reservesAfterSlippageSelector = selector<>
+export const fractionToRemoveState = atom<number>({
+  key: "fractionToRemove",
+  default: 1,
+});
 
 export const minimumAmountsSelector = selector<[BigNumber, BigNumber]>({
   key: "minimumAmounts",
   get: ({ get }) => {
     const lpReserves = get(lpReservesState);
     const userLpShare = get(userLpShareSelector);
+    const shareToRemove = userLpShare.multipliedBy(get(fractionToRemoveState));
     if (userLpShare.isEqualTo(0) || lpReserves[0].isEqualTo(0))
       return [new BigNumber(0), new BigNumber(0)];
     const slippage = get(userSlippageToleranceState);
@@ -111,12 +114,12 @@ export const minimumAmountsSelector = selector<[BigNumber, BigNumber]>({
     );
     return invert
       ? [
-          token1ReservesAfterNegativeSlippage.multipliedBy(userLpShare),
-          token0ReservesAfterPositiveSlippage.multipliedBy(userLpShare),
+          token1ReservesAfterNegativeSlippage.multipliedBy(shareToRemove),
+          token0ReservesAfterPositiveSlippage.multipliedBy(shareToRemove),
         ]
       : [
-          token0ReservesAfterPositiveSlippage.multipliedBy(userLpShare),
-          token1ReservesAfterNegativeSlippage.multipliedBy(userLpShare),
+          token0ReservesAfterPositiveSlippage.multipliedBy(shareToRemove),
+          token1ReservesAfterNegativeSlippage.multipliedBy(shareToRemove),
         ];
   },
 });

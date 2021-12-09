@@ -1,4 +1,8 @@
 import "tailwindcss/tailwind.css";
+import "@fontsource/space-mono";
+import "@fontsource/biorhyme";
+
+import "../style/tailwind.css";
 
 import type { AppProps } from "next/app";
 import { RecoilRoot } from "recoil";

@@ -8,6 +8,8 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@fontsource/biorhyme": "^4.5.0",
+    "@fontsource/space-mono": "^4.5.0",
     "@web3-react/core": "^6.1.9",
     "@web3-react/injected-connector": "^6.0.7",
     "bignumber.js": "^9.0.1",

@@ -13,18 +13,19 @@ import {
 } from "recoil";
 import useUniswapPair from "../../hooks/useUniswapPair";
 import {
+  fractionToRemoveState,
   lpReservesState,
   lpTotalSupplyState,
   minimumAmountsSelector,
   selectedTokensInfo,
-  selectedTokensState,
+  selectedTokensSelector,
   userLPBalanceState,
   userSlippageToleranceState,
   userTokensInLpSelector,
 } from "../../state/state";
 
 const UniswapLiquidityPosition: FC<{}> = ({}) => {
-  const tokens = useRecoilValue(selectedTokensState);
+  const tokens = useRecoilValue(selectedTokensSelector);
   const pair = useUniswapPair(tokens[0], tokens[1]);
   const { account } = useWeb3React<providers.Web3Provider>();
 
@@ -34,7 +35,12 @@ const UniswapLiquidityPosition: FC<{}> = ({}) => {
   const resetLpReserves = useResetRecoilState(lpReservesState);
   const setLpTotalSupply = useSetRecoilState(lpTotalSupplyState);
   const resetLpTotalSupply = useResetRecoilState(lpTotalSupplyState);
-  const slippageTolerance = useRecoilValue(userSlippageToleranceState);
+  const [slippageTolerance, setSlippageTolerance] = useRecoilState(
+    userSlippageToleranceState
+  );
+  const [fractionToRemove, setFractionToRemove] = useRecoilState(
+    fractionToRemoveState
+  );
   const minTokens = useRecoilValue(minimumAmountsSelector);
 
   const userTokensInLp = useRecoilValue(userTokensInLpSelector);
@@ -45,7 +51,6 @@ const UniswapLiquidityPosition: FC<{}> = ({}) => {
       resetLpBalance();
       return;
     } else {
-      // TODO: check approval status and show approve button
       resetLpBalance();
       pair.balanceOf(account).then((balance: EthersBigNumber) => {
         setLpBalance(new BigNumber(balance.toString()));
@@ -81,24 +86,76 @@ const UniswapLiquidityPosition: FC<{}> = ({}) => {
 
   return (
     // TODO: Decimal values should be floored.
-    <div className="grid grid-cols-2">
-      <span className="font-bold">My LP Tokens</span>
+    <div className="grid grid-cols-2 gap-x-4 gap-y-2">
+      <span className="font-extrabold underline text-right text-sm self-end">
+        LP Balance
+      </span>
       <span>{formatUnits(lpBalance.toFixed(0))}</span>
-      <span className="font-bold">my {tokenInfo[0]?.symbol} in lp</span>
+      <span className="font-extrabold underline text-right text-sm self-end">
+        {tokenInfo[0]?.symbol} in LP
+      </span>
       <span>
         {formatUnits(userTokensInLp[0].toFixed(0), tokenInfo[0]?.decimals)}
       </span>
-      <span className="font-bold">my {tokenInfo[1]?.symbol} in lp</span>
+      <span className="font-extrabold underline text-right text-sm self-end">
+        {tokenInfo[1]?.symbol} in LP
+      </span>
       <span>
         {formatUnits(userTokensInLp[1].toFixed(0), tokenInfo[1]?.decimals)}
       </span>
-      <span className="font-bold">slippage tolerance</span>
-      <span>{slippageTolerance * 100}%</span>
-      <span className="font-bold">Min {tokenInfo[0]?.symbol}</span>
+      <span className="font-extrabold underline text-right text-sm self-end">
+        Slippage tolerance
+      </span>
+      <div className="flex flex-row gap-2">
+        <button
+          className="rounded-full border border-black w-4 h-4 flex items-center justify-center self-center"
+          onClick={() => {
+            setSlippageTolerance((prev) => Math.max(0, prev - 0.005));
+          }}
+        >
+          <span className="relative -top-px">-</span>
+        </button>
+        <span>{(slippageTolerance * 100).toFixed(1)}%</span>
+        <button
+          className="rounded-full border border-black w-4 h-4 flex items-center justify-center self-center"
+          onClick={() => {
+            setSlippageTolerance((prev) => Math.min(1, prev + 0.005));
+          }}
+        >
+          <span className="relative left-px">+</span>
+        </button>
+      </div>
+      <span className="font-extrabold underline text-right text-sm self-end">
+        Amount of liquidity to migrate
+      </span>
+      <div className="flex flex-row gap-2">
+        <button
+          className="rounded-full border border-black w-4 h-4 flex items-center justify-center self-center"
+          onClick={() => {
+            setFractionToRemove((prev) => Math.max(0, prev - 0.05));
+          }}
+        >
+          <span className="relative -top-px">-</span>
+        </button>
+        <span>{(fractionToRemove * 100).toFixed(0)}%</span>
+        <button
+          className="rounded-full border border-black w-4 h-4 flex items-center justify-center self-center"
+          onClick={() => {
+            setFractionToRemove((prev) => Math.min(1, prev + 0.05));
+          }}
+        >
+          <span className="relative left-px">+</span>
+        </button>
+      </div>
+      <span className="font-extrabold underline text-right text-sm self-end">
+        Minimum {tokenInfo[0]?.symbol} removed
+      </span>
       <span>
         {formatUnits(minTokens[0].toFixed(0), tokenInfo[0]?.decimals)}
       </span>
-      <span className="font-bold">Min {tokenInfo[1]?.symbol}</span>
+      <span className="font-extrabold underline text-right text-sm self-end">
+        Minimum {tokenInfo[1]?.symbol} removed
+      </span>
       <span>
         {formatUnits(minTokens[1].toFixed(0), tokenInfo[1]?.decimals)}
       </span>

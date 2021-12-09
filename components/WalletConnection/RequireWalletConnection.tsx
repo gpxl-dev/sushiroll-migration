@@ -11,7 +11,7 @@ const RequireWalletConnection: FC<{}> = ({ children }) => {
   return active ? (
     <>{children}</>
   ) : (
-    <div className="flex flex-col items-center">
+    <div className="flex flex-col items-center mt-24">
       <p className="font-serif p-8"> Please connect your wallet to continue.</p>
       <WalletConnection />
     </div>

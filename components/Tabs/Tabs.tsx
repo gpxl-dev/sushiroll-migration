@@ -13,7 +13,10 @@ export const Tab: FC<TabProps> = ({ children }) => {
 
 /**
  * Simple tabs component. Requires a recoil state family param `tabsId` to
- * store current tab state to allow external navigation.
+ * store current tab state to allow external navigation. Instead of an approach
+ * where tabs register with this parent component, we can rely on typescript
+ * to ensure that our children have the right props (in this case just a label)
+ * to be used as a tab.
  */
 export const Tabs: FC<{
   children: ReactElement<TabProps> | Array<ReactElement<TabProps>>;
@@ -29,6 +32,10 @@ export const Tabs: FC<{
     [children]
   );
 
+  // This is needed because our buttons can push our active index out of bounds
+  // An expansion could include the total number of tabs in the recoil state to
+  // prevent this happening, but for this simple demo it's not a problem as
+  // we are hiding the relevant buttons at extremities anyway.
   if (activeIndex >= childrenAsArray.length - 1)
     setActiveIndex(childrenAsArray.length - 1);
   else if (activeIndex < 0) setActiveIndex(0);

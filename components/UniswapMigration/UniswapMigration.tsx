@@ -1,7 +1,6 @@
 import { splitSignature } from "@ethersproject/bytes";
 import { useWeb3React } from "@web3-react/core";
 import BigNumber from "bignumber.js";
-import classNames from "classnames";
 import {
   BigNumber as EthersBigNumber,
   constants,
@@ -110,9 +109,16 @@ const MigrateUniswap: FC<{}> = ({}) => {
   const approve = useCallback(() => {
     if (canMigrate) {
       setApprovePending(true);
-      pair.approve(sushiRoll.address, amountToMigrate.toFixed(0)).catch(() => {
-        setApprovePending(false);
-      });
+      pair
+        .approve(sushiRoll.address, amountToMigrate.toFixed(0))
+        .then((tx: any) => {
+          return tx.wait();
+        })
+        // Note: could `.then` here for onSuccess but wanted to demonstrate
+        // using events (above)
+        .catch(() => {
+          setApprovePending(false);
+        });
     }
   }, [amountToMigrate, canMigrate, pair, setApprovePending, sushiRoll]);
 
